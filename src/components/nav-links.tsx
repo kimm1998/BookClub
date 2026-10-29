@@ -14,7 +14,12 @@ const links = [
 export function NavLinks({ variant, isAdmin = false }: { variant: "side" | "tabs"; isAdmin?: boolean }) {
   const pathname = usePathname();
   const visibleLinks = isAdmin
-    ? [...links, { href: "/admin/books", label: "Manage books", icon: "⚙️" }]
+    ? [
+        ...links,
+        { href: "/admin/books", label: "Manage books", icon: "⚙️" },
+        { href: "/admin/schedule", label: "Schedule", icon: "🗓️" },
+        { href: "/admin/members", label: "Members", icon: "👥" },
+      ]
     : links;
 
   return (

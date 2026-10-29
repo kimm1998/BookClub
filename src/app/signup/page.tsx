@@ -19,8 +19,13 @@ export default function SignupPage() {
       >
         <div className="text-center">
           <h1 className="text-2xl font-bold text-brand-700">📚 Join the club</h1>
-          <p className="mt-1 text-sm opacity-70">Create your reader account.</p>
+          <p className="mt-1 text-sm opacity-70">Signup is invite-only. Ask an admin for a code.</p>
         </div>
+
+        <label className="block text-sm font-medium">
+          Invite code
+          <input name="invite_code" required maxLength={64} autoComplete="off" className={`${input} uppercase`} />
+        </label>
 
         <label className="block text-sm font-medium">
           Display name
