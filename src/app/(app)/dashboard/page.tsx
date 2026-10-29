@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { LiveRefresh } from "@/components/live-refresh";
 
 type ProgressRow = {
   user_id: string;
@@ -66,6 +67,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
+      <LiveRefresh />
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
       {/* Spotlight */}
