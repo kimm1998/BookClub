@@ -12,7 +12,7 @@ type Cycle = {
   id: string;
   name: string;
   status: "open" | "closed";
-  created_at: string;
+  opens_at: string;
 };
 
 type Nomination = {
@@ -36,7 +36,7 @@ export default async function NominationsPage({
   if (!user) return null;
 
   const [{ data: cycles, error: cycleError }, { data: profile }, { data: books }] = await Promise.all([
-    supabase.from("nomination_cycles").select("id, name, status, created_at").order("created_at", { ascending: false }),
+    supabase.from("nomination_cycles").select("id, name, status, opens_at").order("opens_at", { ascending: false }),
     supabase.from("profiles").select("role").eq("id", user.id).single(),
     supabase.from("books").select("id, title, author, cover_url, total_chapters").order("title"),
   ]);
