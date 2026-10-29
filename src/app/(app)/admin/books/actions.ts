@@ -110,3 +110,31 @@ export async function activateBook(
   revalidatePath("/discussions");
   return { ok: true };
 }
+
+export async function deleteBook(
+  _: BookAdminActionState,
+  formData: FormData,
+): Promise<BookAdminActionState> {
+  const bookId = z.string().uuid().safeParse(formData.get("bookId"));
+  if (!bookId.success) return { error: "Invalid book." };
+  const { supabase, isAdmin } = await adminClient();
+  if (!isAdmin) return { error: "Only admins can delete books." };
+
+  const { data: book } = await supabase
+    .from("books")
+    .select("status")
+    .eq("id", bookId.data)
+    .maybeSingle();
+  if (!book) return { error: "Book not found." };
+  if (book.status === "active_club_read") {
+    return { error: "Select another active club read before deleting this book." };
+  }
+
+  const { error } = await supabase.from("books").delete().eq("id", bookId.data);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/books");
+  revalidatePath("/library");
+  revalidatePath("/nominations");
+  revalidatePath("/discussions");
+  return { ok: true };
+}
