@@ -11,12 +11,15 @@ const links = [
   { href: "/nominations", label: "Vote", icon: "🗳️" },
 ];
 
-export function NavLinks({ variant }: { variant: "side" | "tabs" }) {
+export function NavLinks({ variant, isAdmin = false }: { variant: "side" | "tabs"; isAdmin?: boolean }) {
   const pathname = usePathname();
+  const visibleLinks = isAdmin
+    ? [...links, { href: "/admin/books", label: "Manage books", icon: "⚙️" }]
+    : links;
 
   return (
     <>
-      {links.map((l) => {
+      {visibleLinks.map((l) => {
         const active = pathname.startsWith(l.href);
         const base =
           variant === "side"
