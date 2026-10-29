@@ -21,6 +21,7 @@ const signupSchema = z.object({
   display_name: z.string().trim().min(1, "Enter a display name").max(50),
   email: z.string().trim().email("Enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  invite_code: z.string().trim().min(1, "Enter your invite code").max(64),
 });
 
 export async function login(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -38,12 +39,15 @@ export async function signup(_prev: FormState, formData: FormData): Promise<Form
   const parsed = signupSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { email, password, username, display_name } = parsed.data;
+  const { email, password, username, display_name, invite_code } = parsed.data;
   const supabase = await createClient();
+
+  const { data: validInvite } = await supabase.rpc("check_invite", { p_code: invite_code });
+  if (!validInvite) return { error: "That invite code is invalid, expired or already used." };
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { username, display_name } },
+    options: { data: { username, display_name, invite_code } },
   });
 
   if (error) {
