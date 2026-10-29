@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { activateBook, addBook, updateBook } from "@/app/(app)/admin/books/actions";
+import { activateBook, addBook, deleteBook, updateBook } from "@/app/(app)/admin/books/actions";
 
 type BookFields = {
   id: string;
@@ -43,6 +43,7 @@ export function AddBookForm() {
 export function BookEditor({ book }: { book: BookFields }) {
   const [state, action, pending] = useActionState(updateBook, {});
   const [activateState, activateAction, activatePending] = useActionState(activateBook, {});
+  const [deleteState, deleteAction, deletePending] = useActionState(deleteBook, {});
   return (
     <article className="space-y-3 rounded-2xl bg-white p-4 ring-1 ring-black/5">
       <form action={action} className="space-y-3">
@@ -74,6 +75,21 @@ export function BookEditor({ book }: { book: BookFields }) {
           <input type="hidden" name="bookId" value={book.id} />
           <button disabled={activatePending} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{activatePending ? "Selecting…" : "Make active club read"}</button>
           {activateState.error && <span role="alert" className="text-sm text-red-700">{activateState.error}</span>}
+        </form>
+      )}
+      {book.status !== "active_club_read" && (
+        <form
+          action={deleteAction}
+          onSubmit={(event) => {
+            if (!window.confirm(`Delete "${book.title}"? This also removes its nominations, votes, thoughts, discussions and library entries. This cannot be undone.`)) {
+              event.preventDefault();
+            }
+          }}
+          className="flex flex-wrap items-center gap-3"
+        >
+          <input type="hidden" name="bookId" value={book.id} />
+          <button disabled={deletePending} className="rounded-lg px-4 py-2 text-sm font-semibold text-red-700 ring-1 ring-red-200 hover:bg-red-50 disabled:opacity-50">{deletePending ? "Deleting…" : "Delete book"}</button>
+          {deleteState.error && <span role="alert" className="text-sm text-red-700">{deleteState.error}</span>}
         </form>
       )}
     </article>
