@@ -35,7 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             📚 BookClub
           </Link>
           <nav className="space-y-1" aria-label="Main">
-            <NavLinks variant="side" />
+            <NavLinks variant="side" isAdmin={isAdmin} />
           </nav>
         </div>
         <div className="space-y-2 border-t border-black/10 pt-4">
@@ -65,7 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         aria-label="Main"
         className="fixed inset-x-0 bottom-0 z-10 flex border-t border-black/10 bg-white md:hidden"
       >
-        <NavLinks variant="tabs" />
+        <NavLinks variant="tabs" isAdmin={isAdmin} />
       </nav>
     </div>
   );

@@ -8,9 +8,12 @@ A multi-user book club web app built with Next.js (App Router), React, Tailwind 
 3. Auth and protected layout
 4. Dashboard
 5. Progress and spoiler shield
-6. Library, discussions, nominations and voting
+6. Library and discussions
+7. Nominations, voting and admin book management
 
 ## Database setup
 1. Create a Supabase project.
-2. Run `supabase/migrations/0001_init.sql` in the SQL Editor.
+2. Run `supabase/migrations/0001_init.sql`, `0002_storage.sql`, and `0003_nomination_admin.sql` in order in the SQL Editor.
 3. Sign up once in the app, then edit the email in `supabase/seed.sql` and run it to become admin and load sample data.
+
+Admins can manage the catalog from **Manage books**, open nomination cycles from **Vote**, and finalize a nomination to make its book the active read. Members can search Google Books while nominating; chapter counts can be corrected in the admin book manager before a title is selected.
