@@ -4,6 +4,7 @@ import {
   AdminCycleActions,
   CreateCycleForm,
   FinalizeButton,
+  NominationEditControls,
   NominationForm,
   VoteButton,
 } from "@/components/nomination-forms";
@@ -19,6 +20,8 @@ type Nomination = {
   id: string;
   user_id: string;
   book_id: string;
+  title: string;
+  author: string;
   pitch_note: string | null;
   status: "pending" | "shortlisted" | "selected";
   created_at: string;
@@ -59,7 +62,7 @@ export default async function NominationsPage({
   if (activeCycle) {
     const { data: nominations, error } = await supabase
       .from("nominations")
-      .select("id, user_id, book_id, pitch_note, status, created_at")
+      .select("id, user_id, book_id, title, author, pitch_note, status, created_at")
       .eq("cycle_id", activeCycle.id)
       .order("created_at");
     if (error) {
@@ -142,6 +145,8 @@ export default async function NominationsPage({
               {nominationRows.map((nomination) => {
                 const book = bookById.get(nomination.book_id);
                 if (!book) return null;
+                const canManageNomination =
+                  isAdmin || (activeCycle.status === "open" && nomination.user_id === user.id);
                 return (
                   <article key={nomination.id} className="flex flex-col gap-4 rounded-2xl bg-white p-4 ring-1 ring-black/5 sm:flex-row">
                     {book.cover_url ? (
@@ -153,8 +158,8 @@ export default async function NominationsPage({
                     <div className="min-w-0 flex-1 space-y-2">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h3 className="font-semibold">{book.title}</h3>
-                          <p className="text-sm opacity-70">by {book.author}</p>
+                          <h3 className="font-semibold">{nomination.title}</h3>
+                          <p className="text-sm opacity-70">by {nomination.author}</p>
                         </div>
                         {nomination.status === "selected" && <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-800">Selected</span>}
                       </div>
@@ -165,6 +170,14 @@ export default async function NominationsPage({
                         {activeCycle.status === "open" && <VoteButton nominationId={nomination.id} voted={myVote === nomination.id} />}
                         {isAdmin && activeCycle.status === "open" && <FinalizeButton cycleId={activeCycle.id} nominationId={nomination.id} />}
                       </div>
+                      {canManageNomination && (
+                        <NominationEditControls
+                          nominationId={nomination.id}
+                          title={nomination.title}
+                          author={nomination.author}
+                          pitchNote={nomination.pitch_note}
+                        />
+                      )}
                     </div>
                   </article>
                 );

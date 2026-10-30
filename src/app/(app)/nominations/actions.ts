@@ -96,6 +96,8 @@ export async function createNomination(
     user_id: user.id,
     book_id: bookId,
     cycle_id: cycleId,
+    title,
+    author,
     pitch_note: pitchNote || null,
     status: "pending",
   });
@@ -104,6 +106,49 @@ export async function createNomination(
     return { error: error.message };
   }
 
+  revalidatePath("/nominations");
+  revalidatePath("/library");
+  return { ok: true };
+}
+
+const editNominationSchema = z.object({
+  nominationId: z.string().uuid(),
+  title: z.string().trim().min(1).max(200),
+  author: z.string().trim().min(1).max(200),
+  pitchNote: z.string().trim().max(1000),
+});
+
+export async function editNomination(
+  _: NominationActionState,
+  formData: FormData,
+): Promise<NominationActionState> {
+  const parsed = editNominationSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const { supabase, user } = await getSignedInUser();
+  if (!user) return { error: "Sign in to edit a nomination." };
+
+  const { error } = await supabase.rpc("edit_nomination", {
+    p_nomination: parsed.data.nominationId,
+    p_title: parsed.data.title,
+    p_author: parsed.data.author,
+    p_pitch_note: parsed.data.pitchNote || null,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/nominations");
+  return { ok: true };
+}
+
+export async function deleteNomination(
+  _: NominationActionState,
+  formData: FormData,
+): Promise<NominationActionState> {
+  const nominationId = z.string().uuid().safeParse(formData.get("nominationId"));
+  if (!nominationId.success) return { error: "Invalid nomination." };
+  const { supabase, user } = await getSignedInUser();
+  if (!user) return { error: "Sign in to delete a nomination." };
+
+  const { error } = await supabase.rpc("delete_nomination", { p_nomination: nominationId.data });
+  if (error) return { error: error.message };
   revalidatePath("/nominations");
   revalidatePath("/library");
   return { ok: true };
