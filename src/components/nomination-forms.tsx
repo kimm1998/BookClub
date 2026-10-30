@@ -5,6 +5,8 @@ import {
   castVote,
   createCycle,
   createNomination,
+  deleteNomination,
+  editNomination,
   finalizeCycle,
   closeCycle,
   type NominationActionState,
@@ -122,6 +124,72 @@ export function NominationForm({ cycleId }: { cycleId: string }) {
         {state.ok && <span className="text-sm text-green-700">Nominated ✓</span>}
       </div>
     </form>
+  );
+}
+
+export function NominationEditControls({
+  nominationId,
+  title,
+  author,
+  pitchNote,
+}: {
+  nominationId: string;
+  title: string;
+  author: string;
+  pitchNote: string | null;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editState, editAction, editPending] = useActionState(editNomination, {});
+  const [deleteState, deleteAction, deletePending] = useActionState(deleteNomination, {});
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setEditing((current) => !current)}
+          className="rounded-md px-2 py-1 text-xs font-medium text-brand-700 ring-1 ring-black/10 hover:bg-brand-50"
+        >
+          {editing ? "Cancel edit" : "Edit suggestion"}
+        </button>
+        <form
+          action={deleteAction}
+          onSubmit={(event) => {
+            if (!window.confirm("Delete this book suggestion?")) event.preventDefault();
+          }}
+        >
+          <input type="hidden" name="nominationId" value={nominationId} />
+          <button disabled={deletePending} className="rounded-md px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-red-200 hover:bg-red-50 disabled:opacity-50">
+            {deletePending ? "Deleting…" : "Delete suggestion"}
+          </button>
+          {deleteState.error && <p role="alert" className="mt-1 text-xs text-red-700">{deleteState.error}</p>}
+        </form>
+      </div>
+      {editing && (
+        <form action={editAction} className="space-y-2 rounded-lg bg-cream p-3">
+          <input type="hidden" name="nominationId" value={nominationId} />
+          <label className="block space-y-1 text-xs">
+            <span>Title</span>
+            <input name="title" required maxLength={200} defaultValue={title} className="w-full rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-black/10" />
+          </label>
+          <label className="block space-y-1 text-xs">
+            <span>Author</span>
+            <input name="author" required maxLength={200} defaultValue={author} className="w-full rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-black/10" />
+          </label>
+          <label className="block space-y-1 text-xs">
+            <span>Why should the club read it?</span>
+            <textarea name="pitchNote" maxLength={1000} rows={2} defaultValue={pitchNote ?? ""} className="w-full rounded-lg bg-white p-2 text-sm ring-1 ring-black/10" />
+          </label>
+          <div className="flex items-center gap-2">
+            <button disabled={editPending} className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">
+              {editPending ? "Saving…" : "Save suggestion"}
+            </button>
+            {editState.error && <span role="alert" className="text-xs text-red-700">{editState.error}</span>}
+            {editState.ok && <span className="text-xs text-green-700">Saved</span>}
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
 

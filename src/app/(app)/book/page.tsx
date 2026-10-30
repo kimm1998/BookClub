@@ -18,12 +18,15 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
     return <p className="rounded-xl bg-white p-6 ring-1 ring-black/5">No active club book yet.</p>;
   }
 
-  const { data: ub } = await supabase
-    .from("user_books")
-    .select("current_chapter, status")
-    .eq("user_id", user.id)
-    .eq("book_id", book.id)
-    .maybeSingle();
+  const [{ data: ub }, { data: profile }] = await Promise.all([
+    supabase
+      .from("user_books")
+      .select("current_chapter, status")
+      .eq("user_id", user.id)
+      .eq("book_id", book.id)
+      .maybeSingle(),
+    supabase.from("profiles").select("role").eq("id", user.id).single(),
+  ]);
 
   const current = ub?.current_chapter ?? 0;
   const { chapter: chapterParam } = await searchParams;
@@ -74,7 +77,7 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
         )}
 
         <ThoughtForm bookId={book.id} chapter={chapter} canPost={canPost} />
-        <ThoughtList thoughts={(thoughts ?? []) as Thought[]} />
+        <ThoughtList thoughts={(thoughts ?? []) as Thought[]} currentUserId={user.id} isAdmin={profile?.role === "admin"} />
       </section>
     </div>
   );

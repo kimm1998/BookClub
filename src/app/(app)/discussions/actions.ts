@@ -74,3 +74,87 @@ export async function postComment(
   revalidatePath("/discussions");
   return { ok: true };
 }
+
+const editCommentSchema = z.object({
+  commentId: z.string().uuid(),
+  content: z.string().trim().min(1).max(2000),
+});
+
+export async function editComment(
+  _: DiscussionActionState,
+  formData: FormData,
+): Promise<DiscussionActionState> {
+  const parsed = editCommentSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+
+  const { error } = await supabase.rpc("edit_topic_comment", {
+    p_comment: parsed.data.commentId,
+    p_content: parsed.data.content,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/discussions");
+  return { ok: true };
+}
+
+export async function deleteComment(
+  _: DiscussionActionState,
+  formData: FormData,
+): Promise<DiscussionActionState> {
+  const commentId = z.string().uuid().safeParse(formData.get("commentId"));
+  if (!commentId.success) return { error: "Invalid reply." };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+
+  const { error } = await supabase.rpc("delete_topic_comment", { p_comment: commentId.data });
+  if (error) return { error: error.message };
+  revalidatePath("/discussions");
+  return { ok: true };
+}
+
+const editTopicSchema = z.object({
+  topicId: z.string().uuid(),
+  title: z.string().trim().min(3).max(120),
+  promptBody: z.string().trim().min(1).max(3000),
+  category: z.string().trim().min(1).max(40),
+});
+
+export async function editTopic(
+  _: DiscussionActionState,
+  formData: FormData,
+): Promise<DiscussionActionState> {
+  const parsed = editTopicSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+
+  const { error } = await supabase.rpc("edit_discussion_topic", {
+    p_topic: parsed.data.topicId,
+    p_title: parsed.data.title,
+    p_prompt_body: parsed.data.promptBody,
+    p_category: parsed.data.category,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/discussions");
+  return { ok: true };
+}
+
+export async function deleteTopic(
+  _: DiscussionActionState,
+  formData: FormData,
+): Promise<DiscussionActionState> {
+  const topicId = z.string().uuid().safeParse(formData.get("topicId"));
+  if (!topicId.success) return { error: "Invalid discussion prompt." };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+
+  const { error } = await supabase.rpc("delete_discussion_topic", { p_topic: topicId.data });
+  if (error) return { error: error.message };
+  revalidatePath("/discussions");
+  return { ok: true };
+}

@@ -84,3 +84,39 @@ export async function postThought(_: ActionState, formData: FormData): Promise<A
   revalidatePath("/book");
   return { ok: true };
 }
+
+const editThoughtSchema = z.object({
+  thoughtId: z.string().uuid(),
+  content: z.string().trim().min(1).max(2000),
+  sentiment: z.union([z.literal(""), z.enum(["loved", "liked", "confused", "shocked", "bored", "theory"])]),
+});
+
+export async function editThought(_: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = editThoughtSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+
+  const { error } = await supabase.rpc("edit_chapter_thought", {
+    p_thought: parsed.data.thoughtId,
+    p_content: parsed.data.content,
+    p_sentiment: parsed.data.sentiment || null,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/book");
+  return { ok: true };
+}
+
+export async function deleteThought(_: ActionState, formData: FormData): Promise<ActionState> {
+  const id = z.string().uuid().safeParse(formData.get("thoughtId"));
+  if (!id.success) return { error: "Invalid thought." };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+
+  const { error } = await supabase.rpc("delete_chapter_thought", { p_thought: id.data });
+  if (error) return { error: error.message };
+  revalidatePath("/book");
+  return { ok: true };
+}

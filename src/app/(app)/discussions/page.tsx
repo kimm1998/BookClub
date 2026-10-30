@@ -1,5 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { CreateTopicForm, CommentForm } from "@/components/discussion-forms";
+import {
+  CommentAdminControls,
+  CommentForm,
+  CreateTopicForm,
+  TopicAdminControls,
+} from "@/components/discussion-forms";
 
 type Topic = {
   id: string;
@@ -45,6 +50,7 @@ export default async function DiscussionsPage() {
   }
 
   const commentRows = (comments ?? []) as Comment[];
+  const isAdmin = profile?.role === "admin";
   const authorIds = [...new Set([...topicRows.map((topic) => topic.created_by), ...commentRows.map((comment) => comment.user_id)])];
   const { data: profiles } = authorIds.length
     ? await supabase.from("profiles").select("id, display_name, username").in("id", authorIds)
@@ -81,6 +87,7 @@ export default async function DiscussionsPage() {
                   <h2 className="text-lg font-semibold">{topic.title}</h2>
                   <p className="whitespace-pre-wrap text-sm leading-relaxed">{topic.prompt_body}</p>
                   <p className="text-xs opacity-60">Prompt by {profileById.get(topic.created_by) ?? "Club admin"}</p>
+                  {isAdmin && <TopicAdminControls topic={topic} />}
                 </header>
 
                 <section className="space-y-3 border-t border-black/10 pt-4">
@@ -94,6 +101,9 @@ export default async function DiscussionsPage() {
                             <time dateTime={comment.created_at} className="opacity-60">{new Date(comment.created_at).toLocaleString()}</time>
                           </div>
                           <p className="whitespace-pre-wrap text-sm">{comment.content}</p>
+                          {(isAdmin || comment.user_id === user.id) && (
+                            <CommentAdminControls commentId={comment.id} content={comment.content} />
+                          )}
                         </li>
                       ))}
                     </ul>
